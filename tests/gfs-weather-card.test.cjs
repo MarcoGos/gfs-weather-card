@@ -239,14 +239,17 @@ test('day boundaries align across headings and all forecast rows', async () => {
     /\.day-heading \+ \.day-heading, \.day-start:not\(:first-of-type\) \{\s*border-left: 2px solid var\(--secondary-text-color, #777\)/);
 });
 
-test('wind direction background overrides alternating day backgrounds', async () => {
+test('wind direction cells use alternating day backgrounds', async () => {
   const { card } = setup();
   await load(card, forecast(6, [0, 24, 48]));
-  assert.match(card.shadowRoot.innerHTML,
+  assert.doesNotMatch(card.shadowRoot.innerHTML,
     /\.forecast-table td\.direction \{[^}]*background-color: var\(--gfs-card-background\)/);
+  assert.match(card.shadowRoot.innerHTML, /\.forecast-table \.odd \{ background-color: var\(--gfs-muted-background\); \}/);
+  assert.match(card.shadowRoot.innerHTML, /\.forecast-table \.even \{ background-color: var\(--gfs-card-background\); \}/);
   const cells = [...card._tableMarkup().matchAll(/<td class="[^"]*\bdirection\b[^"]*"([^>]*)>/g)];
   assert.equal(cells.length, 3);
   assert.ok(cells.every((match) => !match[1].includes('style=')));
+  assert.ok(cells.every((match) => /\b(?:odd|even)\b/.test(match[0])));
 });
 
 for (const pass of [0, 6, 12, 18]) {
