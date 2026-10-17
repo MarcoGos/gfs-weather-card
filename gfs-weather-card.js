@@ -160,6 +160,8 @@ const CARD_STYLES = `
   }
   @media (max-width: 600px) {
     thead tr:last-child th { top: 32px; }
+    .row-label { position: static; }
+    .corner { left: auto; }
   }
 `;
 
