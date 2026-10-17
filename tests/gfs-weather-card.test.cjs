@@ -64,7 +64,7 @@ for (const pass of [0, 6, 12, 18]) {
   test(`renders pass ${pass} and forecast times relative to the run`, async () => {
     const { card } = setup();
     await load(card, forecast(pass));
-    assert.match(card.shadowRoot.innerHTML, new RegExp(`<span>${String(pass).padStart(2, '0')} UTC</span>`));
+    assert.match(card.shadowRoot.innerHTML, new RegExp(`<span>17 okt 2026 \\(${String(pass).padStart(2, '0')}\\)</span>`));
     assert.deepEqual(headingHours(card), [0, 3].map((hour) =>
       new Date(Date.UTC(2026, 9, 17, pass + hour)).getHours()));
   });
@@ -73,7 +73,7 @@ for (const pass of [0, 6, 12, 18]) {
 test('forecast offsets cross midnight without changing the run date', async () => {
   const { card } = setup();
   await load(card, forecast(18, [6, 9]));
-  assert.match(card.shadowRoot.innerHTML, /<span>17 okt 2026<\/span><span>18 UTC<\/span>/);
+  assert.match(card.shadowRoot.innerHTML, /<span>17 okt 2026 \(18\)<\/span>/);
   assert.deepEqual(headingHours(card), [6, 9].map((hour) =>
     new Date(Date.UTC(2026, 9, 17, 18 + hour)).getHours()));
   const day = new Intl.DateTimeFormat('nl-NL', { day: 'numeric' })
@@ -127,15 +127,15 @@ test('ten-minute polling replaces pass 0 with pass 6 from the integration cache'
   } };
   card.connectedCallback();
   await setImmediate();
-  assert.match(card.shadowRoot.innerHTML, /<span>00 UTC<\/span>/);
+  assert.match(card.shadowRoot.innerHTML, /<span>17 okt 2026 \(00\)<\/span>/);
   assert.equal(timers.size, 1);
   const timer = [...timers.values()][0];
   assert.equal(timer.delay, 10 * 60 * 1000);
   latest = forecast(6);
   timer.callback();
   await setImmediate();
-  assert.match(card.shadowRoot.innerHTML, /<span>06 UTC<\/span>/);
-  assert.doesNotMatch(card.shadowRoot.innerHTML, /<span>00 UTC<\/span>/);
+  assert.match(card.shadowRoot.innerHTML, /<span>17 okt 2026 \(06\)<\/span>/);
+  assert.doesNotMatch(card.shadowRoot.innerHTML, /<span>17 okt 2026 \(00\)<\/span>/);
   assert.deepEqual(commands.map((command) => command.type),
     ['gfs_weather_forecast/get_forecast', 'gfs_weather_forecast/get_forecast']);
   card.disconnectedCallback();

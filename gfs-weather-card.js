@@ -496,7 +496,7 @@ class GfsWeatherCard extends HTMLElement {
     const runDateLabel = new Intl.DateTimeFormat('nl-NL', {
       day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
     }).format(runDate).replaceAll('.', '');
-    return `<table class="forecast-table"><thead><tr><th class="corner" rowspan="2"><strong>GFS</strong><span>${runDateLabel}</span><span>${String(info.pass).padStart(2, '0')} UTC</span></th>${dateHeadings}</tr><tr>${timeHeadings}</tr></thead><tbody>${rows}</tbody></table>`;
+    return `<table class="forecast-table"><thead><tr><th class="corner" rowspan="2"><strong>GFS</strong><span>${runDateLabel} (${String(info.pass).padStart(2, '0')})</span></th>${dateHeadings}</tr><tr>${timeHeadings}</tr></thead><tbody>${rows}</tbody></table>`;
   }
 }
 
