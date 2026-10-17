@@ -399,7 +399,7 @@ class GfsWeatherCard extends HTMLElement {
 
   async _load() {
     if (!this.hass) {
-      this._error = 'Wachten op Home Assistant…';
+      this._error = 'Waiting for Home Assistant…';
       this._render();
       return;
     }
@@ -434,7 +434,7 @@ class GfsWeatherCard extends HTMLElement {
     } catch (error) {
       if (requestId !== this._requestId) return;
       this._data = null;
-      this._error = 'Kan de voorspelling niet ophalen. Controleer of de GFS Weather Forecast-integratie is geladen en voorspellingen beschikbaar zijn.';
+      this._error = 'Unable to fetch the forecast. Check that the GFS Weather Forecast integration is loaded and forecasts are available.';
     } finally {
       if (requestId === this._requestId) {
         this._loading = false;
