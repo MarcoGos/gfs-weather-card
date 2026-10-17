@@ -22,4 +22,6 @@ The response must contain an `info.date` value in `YYYY-MM-DD` format and foreca
 
 The card requests the cached forecast every 10 minutes; the integration controls when the underlying data is updated. It converts wind speed to Beaufort, gusts from m/s to km/h, pressure from Pa to hPa above 1000, and visibility from meters to kilometers. The 2m temperature row uses `tmax`.
 
+Cloud, rain, and CAPE values that round to zero are displayed as blank cells, retaining their background colors.
+
 Row labels follow Home Assistant's active language. Dutch, English, and German are supported; other languages fall back to English.
