@@ -333,6 +333,26 @@ function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function validateConfig(config) {
+  if (!isRecord(config)) throw new Error('Card configuration must be an object');
+  if (config.rows === undefined) return;
+  if (!Array.isArray(config.rows) || config.rows.length === 0) {
+    throw new Error('rows must be a non-empty list of row identifiers');
+  }
+  for (const id of config.rows) {
+    if (!ROWS.some((row) => row.label === id)) {
+      throw new Error(`Unknown row identifier: ${String(id)}`);
+    }
+  }
+  if (new Set(config.rows).size !== config.rows.length) {
+    throw new Error('rows must not contain duplicate identifiers');
+  }
+}
+
+function copyConfig(config) {
+  return { ...config, ...(config.rows === undefined ? {} : { rows: [...config.rows] }) };
+}
+
 class GfsWeatherCard extends HTMLElement {
   constructor() {
     super();
@@ -362,9 +382,9 @@ class GfsWeatherCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!isRecord(config)) throw new Error('Card configuration must be an object');
+    validateConfig(config);
     const entryChanged = this._config?.entry_id !== config.entry_id;
-    this._config = { ...config };
+    this._config = copyConfig(config);
     if (this.isConnected && entryChanged) {
       this._requestId += 1;
       this._loading = false;
@@ -481,7 +501,7 @@ class GfsWeatherCard extends HTMLElement {
       return `<th class="time-heading ${dayParityClass(column.date)}${startsDay ? ' day-start' : ''}" scope="col">${String(column.date.getHours()).padStart(2, '0')}h</th>`;
     }).join('');
     const rowLabels = LABELS[this._language] ?? LABELS.en;
-    const rows = ROWS.map((row) => {
+    const rows = ROWS.filter((row) => !this._config?.rows || this._config.rows.includes(row.label)).map((row) => {
       const cells = columns.map((column, index) => {
         const value = row.value(column.point);
         const colorValue = row.colorValue ? row.colorValue(column.point) : value;
@@ -525,7 +545,8 @@ class GfsWeatherCardEditor extends HTMLElement {
   }
 
   setConfig(config) {
-    this._config = { ...config };
+    validateConfig(config);
+    this._config = copyConfig(config);
     this._render();
   }
 
@@ -557,18 +578,46 @@ class GfsWeatherCardEditor extends HTMLElement {
     }
   }
 
+  _updateConfig(config) {
+    validateConfig(config);
+    this._config = copyConfig(config);
+    this.dispatchEvent(new CustomEvent('config-changed', {
+      bubbles: true,
+      composed: true,
+      detail: { config: copyConfig(this._config) },
+    }));
+    this._render();
+  }
+
   _render() {
     if (!this.shadowRoot) return;
+    const language = resolveLanguage(this._hass?.locale?.language ?? this._hass?.language);
+    const selectedRows = this._config.rows ?? ROWS.map((row) => row.label);
     this.shadowRoot.innerHTML = `
       <style>
         :host { display: block; color: var(--primary-text-color, #202124); }
         label { display: block; margin-bottom: 8px; font-size: 14px; }
         select { box-sizing: border-box; width: 100%; padding: 10px 12px; border: 1px solid var(--input-border-color, #888); border-radius: 4px; background: var(--input-fill-color, transparent); color: inherit; font: inherit; }
         p { margin: 8px 0 0; color: var(--secondary-text-color, #666); font-size: 12px; }
+        fieldset { margin: 20px 0 0; padding: 12px; border: 1px solid var(--divider-color, #888); border-radius: 4px; }
+        legend { padding: 0 4px; }
+        .row-option { display: flex; align-items: center; gap: 8px; }
+        input { accent-color: var(--primary-color, #03a9f4); }
+        .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        button { padding: 8px 12px; border: 1px solid var(--divider-color, #888); border-radius: 4px; background: var(--secondary-background-color, transparent); color: inherit; font: inherit; cursor: pointer; }
       </style>
       <label for="entry">GFS Weather Forecast entry</label>
       <select id="entry"></select>
       <p id="status" role="status"></p>
+      <fieldset>
+        <legend>Visible rows</legend>
+        ${ROWS.map((row) => `<label class="row-option"><input type="checkbox" value="${row.label}"${selectedRows.includes(row.label) ? ' checked' : ''}${selectedRows.length === 1 && selectedRows[0] === row.label ? ' disabled' : ''}>${LABELS[language][row.label]}${row.unit ? ` ${row.unit}` : ''}</label>`).join('')}
+        <p>Select at least one row. Rows keep their standard order.</p>
+        <div class="actions">
+          <button type="button" id="select-all">Select all</button>
+          <button type="button" id="reset-rows">Reset to defaults</button>
+        </div>
+      </fieldset>
     `;
 
     const select = this.shadowRoot.querySelector('select');
@@ -583,12 +632,22 @@ class GfsWeatherCardEditor extends HTMLElement {
       const config = { ...this._config };
       if (select.value) config.entry_id = select.value;
       else delete config.entry_id;
-      this._config = config;
-      this.dispatchEvent(new CustomEvent('config-changed', {
-        bubbles: true,
-        composed: true,
-        detail: { config },
-      }));
+      this._updateConfig(config);
+    });
+
+    for (const checkbox of this.shadowRoot.querySelectorAll('input[type="checkbox"]')) {
+      checkbox.addEventListener('change', () => {
+        const rows = [...this.shadowRoot.querySelectorAll('input:checked')].map((input) => input.value);
+        this._updateConfig({ ...this._config, rows });
+      });
+    }
+    this.shadowRoot.querySelector('#select-all').addEventListener('click', () => {
+      this._updateConfig({ ...this._config, rows: ROWS.map((row) => row.label) });
+    });
+    this.shadowRoot.querySelector('#reset-rows').addEventListener('click', () => {
+      const config = { ...this._config };
+      delete config.rows;
+      this._updateConfig(config);
     });
 
     this.shadowRoot.querySelector('#status').textContent = this._entryError ||

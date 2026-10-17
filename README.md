@@ -14,6 +14,27 @@ A custom Home Assistant Lovelace card that displays forecast data from the GFS W
 type: custom:gfs-weather-card
 ```
 
+## Visible rows
+
+Use the card editor's **Visible rows** checklist to choose which forecast rows to show. All rows are shown by default. **Select all** explicitly selects every row; **Reset to defaults** removes the selection override. At least one row must remain selected.
+
+The same selection can be configured in YAML:
+
+```yaml
+type: custom:gfs-weather-card
+rows:
+  - wind
+  - gust
+  - direction
+  - temperature
+  - rain
+  - pressure
+```
+
+Available identifiers, in table order: `wind`, `gust`, `direction`, `temperature`, `upperTemperature`, `cloudHigh`, `cloudMid`, `cloudLow`, `cloudTotal`, `rain`, `cape`, `liftedIndex`, `pressure`, `visibility`.
+
+Omit `rows` to show all rows. Empty lists, unknown identifiers, and duplicates are rejected. Rows always retain the standard table order, regardless of YAML order. Editor row labels follow Home Assistant's active language. Changing row visibility updates the card without requesting new forecast data.
+
 ## JSON format
 
 The card requests the integration's cached JSON through Home Assistant's authenticated WebSocket connection using `gfs_weather_forecast/get_forecast`. When a specific entry is selected in the card editor, the card passes its `entry_id` with the request.

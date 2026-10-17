@@ -18,6 +18,12 @@ function setup() {
   }
   runInNewContext(source, {
     HTMLElement,
+    CustomEvent: class CustomEvent {
+      constructor(type, options) {
+        this.type = type;
+        Object.assign(this, options);
+      }
+    },
     Intl,
     Date,
     customElements: {
@@ -35,7 +41,7 @@ function setup() {
   const Card = elements.get('gfs-weather-card');
   const card = new Card();
   card.setConfig({});
-  return { card, timers };
+  return { card, timers, Editor: elements.get('gfs-weather-card-editor') };
 }
 
 function forecast(pass, hours = [0, 3]) {
@@ -67,6 +73,67 @@ test('uses Home Assistant theme colors for neutral surfaces and text', async () 
   assert.match(card.shadowRoot.innerHTML, /background-color: var\(--gfs-muted-background\)/);
   assert.match(card.shadowRoot.innerHTML, /--gfs-card-background: var\(--ha-card-background/);
   assert.doesNotMatch(card.shadowRoot.innerHTML, /prefers-color-scheme/);
+});
+
+test('row selection filters in standard order without requesting new data', async () => {
+  const { card } = setup();
+  let requests = 0;
+  card._hass = { callWS: async () => {
+    requests += 1;
+    return forecast(6);
+  } };
+  await card._load();
+  assert.equal((card._tableMarkup().match(/class="row-label"/g) || []).length, 14);
+  card.setConfig({ rows: ['pressure', 'wind', 'rain'] });
+  const labels = [...card._tableMarkup().matchAll(/class="row-label" scope="row">([^<]+)/g)]
+    .map((match) => match[1]);
+  assert.deepEqual(labels, ['Wind (Bft)', 'Rain (mm/3h)', 'Pressure +1000 (hPa)']);
+  assert.equal(requests, 1);
+  card.setConfig({});
+  assert.equal((card._tableMarkup().match(/class="row-label"/g) || []).length, 14);
+  assert.equal(requests, 1);
+});
+
+test('card and editor reject invalid row selections without replacing valid config', () => {
+  const { card, Editor } = setup();
+  const editor = new Editor();
+  editor._render = () => {};
+  for (const target of [card, editor]) {
+    target.setConfig({ rows: ['wind'] });
+    for (const rows of [[], null, 'wind', ['unknown'], [1], ['wind', 'wind']]) {
+      assert.throws(() => target.setConfig({ rows }), /rows|row identifier/);
+      assert.deepEqual(Array.from(target._config.rows), ['wind']);
+    }
+  }
+});
+
+test('card copies the row selection and retains localized row labels', async () => {
+  const { card } = setup();
+  const rows = ['temperature'];
+  card.setConfig({ rows });
+  rows.push('wind');
+  await load(card, forecast(6));
+  card.hass = { locale: { language: 'de' } };
+  assert.equal((card._tableMarkup().match(/class="row-label"/g) || []).length, 1);
+  assert.match(card._tableMarkup(), />Temperatur 2m \(°C\)<\/th>/);
+});
+
+test('editor config updates preserve other options and emit independent config copies', () => {
+  const { Editor } = setup();
+  const editor = new Editor();
+  editor._render = () => {};
+  const events = [];
+  editor.dispatchEvent = (event) => events.push(event);
+  editor.setConfig({ type: 'custom:gfs-weather-card', entry_id: 'selected', rows: ['wind'] });
+  editor._updateConfig({ ...editor._config, rows: ['wind', 'rain'] });
+  assert.equal(events.length, 1);
+  assert.equal(events[0].type, 'config-changed');
+  assert.equal(events[0].bubbles, true);
+  assert.equal(events[0].composed, true);
+  assert.equal(events[0].detail.config.entry_id, 'selected');
+  assert.equal(events[0].detail.config.type, 'custom:gfs-weather-card');
+  events[0].detail.config.rows.push('pressure');
+  assert.deepEqual(Array.from(editor._config.rows), ['wind', 'rain']);
 });
 
 test('day boundaries align across headings and all forecast rows', async () => {
