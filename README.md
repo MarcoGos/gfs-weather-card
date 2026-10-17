@@ -16,6 +16,8 @@ type: custom:gfs-weather-card
 
 ## Visible rows
 
+The editor loads integration entries once per Home Assistant connection, so normal state updates do not refresh the entry selector. If loading fails, use **Retry loading entries**.
+
 Use the card editor's **Visible rows** checklist to choose which forecast rows to show. All rows are shown by default. **Select all** explicitly selects every row; **Reset to defaults** removes the selection override. At least one row must remain selected.
 
 The same selection can be configured in YAML:

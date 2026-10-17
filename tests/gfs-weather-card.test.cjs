@@ -136,6 +136,73 @@ test('editor config updates preserve other options and emit independent config c
   assert.deepEqual(Array.from(editor._config.rows), ['wind', 'rain']);
 });
 
+test('editor caches entries across Home Assistant updates, including empty lists', async () => {
+  for (const entries of [[], [{ domain: 'gfs_weather_forecast', entry_id: 'single' }]]) {
+    const { Editor } = setup();
+    const editor = new Editor();
+    let renders = 0;
+    let requests = 0;
+    editor._render = () => { renders += 1; };
+    const connection = {};
+    const callWS = async () => {
+      requests += 1;
+      return entries;
+    };
+    editor.hass = { connection, callWS };
+    editor.hass = { connection, callWS };
+    await setImmediate();
+    const initialRenders = renders;
+    for (let i = 0; i < 10; i += 1) editor.hass = { connection, callWS };
+    await setImmediate();
+    assert.equal(requests, 1);
+    assert.equal(renders, initialRenders);
+    editor.hass = { connection, callWS, language: 'de' };
+    assert.equal(renders, initialRenders + 1);
+    assert.equal(requests, 1);
+    editor.hass = { connection: {}, callWS };
+    await setImmediate();
+    assert.equal(requests, 2);
+  }
+});
+
+test('failed editor entry requests remain visible without automatic retry loops', async () => {
+  const { Editor } = setup();
+  const editor = new Editor();
+  editor._render = () => {};
+  let requests = 0;
+  const callWS = async () => {
+    requests += 1;
+    throw new Error('Disconnected');
+  };
+  editor.hass = { callWS };
+  await setImmediate();
+  editor.hass = { callWS };
+  await setImmediate();
+  assert.equal(requests, 1);
+  assert.equal(editor._entryError, 'Could not load GFS integration entries.');
+  editor._entryError = '';
+  await editor._loadEntries();
+  assert.equal(requests, 2);
+});
+
+test('editor ignores an entry response from a replaced connection', async () => {
+  const { Editor } = setup();
+  const editor = new Editor();
+  editor._render = () => {};
+  let finishOldRequest;
+  editor.hass = { connection: {}, callWS: () => new Promise((resolve) => {
+    finishOldRequest = resolve;
+  }) };
+  editor.hass = { connection: {}, callWS: async () => [
+    { domain: 'gfs_weather_forecast', entry_id: 'new' },
+  ] };
+  await setImmediate();
+  finishOldRequest([{ domain: 'gfs_weather_forecast', entry_id: 'old' }]);
+  await setImmediate();
+  assert.equal(editor._entries[0].entry_id, 'new');
+  assert.equal(editor._entriesLoaded, true);
+});
+
 test('day boundaries align across headings and all forecast rows', async () => {
   const { card } = setup();
   const hours = [0, 3, 9, 18, 24, 36, 48];

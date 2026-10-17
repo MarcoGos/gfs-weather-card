@@ -540,6 +540,7 @@ class GfsWeatherCardEditor extends HTMLElement {
     this._entries = [];
     this._entryError = '';
     this._loadingEntries = false;
+    this._entriesLoaded = false;
     this._hass = null;
     this._entryRequestId = 0;
   }
@@ -551,12 +552,21 @@ class GfsWeatherCardEditor extends HTMLElement {
   }
 
   set hass(hass) {
+    const language = resolveLanguage(this._hass?.locale?.language ?? this._hass?.language);
+    if (this._hass && this._hass.connection !== hass?.connection) {
+      this._entryRequestId += 1;
+      this._loadingEntries = false;
+      this._entriesLoaded = false;
+      this._entries = [];
+      this._entryError = '';
+    }
     this._hass = hass;
+    if (language !== resolveLanguage(hass?.locale?.language ?? hass?.language)) this._render();
     this._loadEntries();
   }
 
   async _loadEntries() {
-    if (!this._hass?.callWS || this._loadingEntries) return;
+    if (!this._hass?.callWS || this._loadingEntries || this._entriesLoaded || this._entryError) return;
     const requestId = ++this._entryRequestId;
     this._loadingEntries = true;
     this._entryError = '';
@@ -566,6 +576,7 @@ class GfsWeatherCardEditor extends HTMLElement {
       if (requestId !== this._entryRequestId) return;
       const entries = Array.isArray(response) ? response : response.entries ?? [];
       this._entries = entries.filter((entry) => entry.domain === 'gfs_weather_forecast');
+      this._entriesLoaded = true;
     } catch {
       if (requestId !== this._entryRequestId) return;
       this._entries = [];
@@ -609,6 +620,7 @@ class GfsWeatherCardEditor extends HTMLElement {
       <label for="entry">GFS Weather Forecast entry</label>
       <select id="entry"></select>
       <p id="status" role="status"></p>
+      ${this._entryError ? '<button type="button" id="retry-entries">Retry loading entries</button>' : ''}
       <fieldset>
         <legend>Visible rows</legend>
         ${ROWS.map((row) => `<label class="row-option"><input type="checkbox" value="${row.label}"${selectedRows.includes(row.label) ? ' checked' : ''}${selectedRows.length === 1 && selectedRows[0] === row.label ? ' disabled' : ''}>${LABELS[language][row.label]}${row.unit ? ` ${row.unit}` : ''}</label>`).join('')}
@@ -648,6 +660,10 @@ class GfsWeatherCardEditor extends HTMLElement {
       const config = { ...this._config };
       delete config.rows;
       this._updateConfig(config);
+    });
+    this.shadowRoot.querySelector('#retry-entries')?.addEventListener('click', () => {
+      this._entryError = '';
+      this._loadEntries();
     });
 
     this.shadowRoot.querySelector('#status').textContent = this._entryError ||
