@@ -163,7 +163,7 @@ const CARD_STYLES = `
   .forecast-table .odd { background-color: var(--gfs-muted-background); }
   .forecast-table .even { background-color: var(--gfs-card-background); }
   .day-heading + .day-heading, .day-start:not(:first-of-type) {
-    border-left: 2px solid var(--secondary-text-color, #777);
+    border-left: 1px solid var(--secondary-text-color, #777);
   }
   .forecast-table tbody td:not(.direction) { color: #000; }
   .forecast-table td.direction { padding: 0.3rem; background-color: var(--gfs-card-background); color: var(--primary-text-color, #202124); font-size: 16px; line-height: 1.5; }
