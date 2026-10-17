@@ -402,7 +402,8 @@ class GfsWeatherCard extends HTMLElement {
       if (this._config?.entry_id) command.entry_id = this._config.entry_id;
       const json = await this.hass.callWS(command);
       if (requestId !== this._requestId) return;
-      if (!isRecord(json) || !isRecord(json.info) || !/^\d{4}-\d{2}-\d{2}$/.test(json.info.date)) {
+      if (!isRecord(json) || !isRecord(json.info) || !/^\d{4}-\d{2}-\d{2}$/.test(json.info.date) ||
+          ![0, 6, 12, 18].includes(json.info.pass)) {
         throw new Error('Invalid forecast data');
       }
 
@@ -442,7 +443,7 @@ class GfsWeatherCard extends HTMLElement {
   _tableMarkup() {
     const { info, points } = this._data;
     const [year, month, day] = info.date.split('-').map(Number);
-    const runDate = new Date(Date.UTC(year, month - 1, day));
+    const runDate = new Date(Date.UTC(year, month - 1, day, info.pass));
     const columns = points.map(({ hour, point }) => ({
       hour,
       point,
@@ -488,7 +489,7 @@ class GfsWeatherCard extends HTMLElement {
     const runDateLabel = new Intl.DateTimeFormat('nl-NL', {
       day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
     }).format(runDate).replaceAll('.', '');
-    return `<table class="forecast-table"><thead><tr><th class="corner" rowspan="2"><strong>GFS</strong><span>${runDateLabel}</span><span>00 UTC</span></th>${dateHeadings}</tr><tr>${timeHeadings}</tr></thead><tbody>${rows}</tbody></table>`;
+    return `<table class="forecast-table"><thead><tr><th class="corner" rowspan="2"><strong>GFS</strong><span>${runDateLabel}</span><span>${String(info.pass).padStart(2, '0')} UTC</span></th>${dateHeadings}</tr><tr>${timeHeadings}</tr></thead><tbody>${rows}</tbody></table>`;
   }
 }
 
