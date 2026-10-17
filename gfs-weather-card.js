@@ -136,6 +136,17 @@ const CARD_STYLES = `
     text-transform: lowercase;
     vertical-align: middle;
   }
+  .day-heading span {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0 0.3rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: clip;
+  }
   .time-heading { font-weight: 700; }
   .row-label {
     position: sticky;
@@ -464,7 +475,7 @@ class GfsWeatherCard extends HTMLElement {
       const weekday = formatDate(date, { weekday: 'short' });
       const day = formatDate(date, { day: 'numeric' });
       const month = formatDate(date, { month: 'short' });
-      return `<th class="day-heading ${dayParityClass(date)}" scope="colgroup" colspan="${count}">${weekday} ${day} ${month}</th>`;
+      return `<th class="day-heading ${dayParityClass(date)}" scope="colgroup" colspan="${count}"><span>${weekday} ${day} ${month}</span></th>`;
     }).join('');
     const timeHeadings = columns.map((column, index) => {
       const startsDay = index === 0 || localDateKey(column.date) !== localDateKey(columns[index - 1].date);

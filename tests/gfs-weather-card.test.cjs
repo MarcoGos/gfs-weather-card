@@ -78,7 +78,7 @@ test('forecast offsets cross midnight without changing the run date', async () =
     new Date(Date.UTC(2026, 9, 17, 18 + hour)).getHours()));
   const day = new Intl.DateTimeFormat('nl-NL', { day: 'numeric' })
     .format(new Date(Date.UTC(2026, 9, 18)));
-  assert.match(card.shadowRoot.innerHTML, new RegExp(`>${formatWeekday(new Date(Date.UTC(2026, 9, 18)))} ${day} okt</th>`));
+  assert.match(card.shadowRoot.innerHTML, new RegExp(`<span>${formatWeekday(new Date(Date.UTC(2026, 9, 18)))} ${day} okt</span></th>`));
 });
 
 function formatWeekday(date) {
@@ -89,7 +89,7 @@ test('one date heading spans all forecast columns on the same local day', async 
   const { card } = setup();
   const hours = [0, 1, 2];
   await load(card, forecast(6, hours));
-  const headings = [...card.shadowRoot.innerHTML.matchAll(/class="day-heading[^"]*" scope="colgroup" colspan="(\d+)">([^<]+)<\/th>/g)];
+  const headings = [...card.shadowRoot.innerHTML.matchAll(/class="day-heading[^"]*" scope="colgroup" colspan="(\d+)"><span>([^<]+)<\/span><\/th>/g)];
   assert.equal(headings.length, 1);
   assert.equal(Number(headings[0][1]), hours.length);
   const date = new Date(Date.UTC(2026, 9, 17, 6));
@@ -110,7 +110,7 @@ test('date headings span only available hours and split at local midnight', asyn
     if (previous?.label === label) previous.count += 1;
     else expected.push({ label, count: 1 });
   }
-  const actual = [...card.shadowRoot.innerHTML.matchAll(/class="day-heading[^"]*" scope="colgroup" colspan="(\d+)">([^<]+)<\/th>/g)]
+  const actual = [...card.shadowRoot.innerHTML.matchAll(/class="day-heading[^"]*" scope="colgroup" colspan="(\d+)"><span>([^<]+)<\/span><\/th>/g)]
     .map((match) => ({ label: match[2], count: Number(match[1]) }));
   assert.deepEqual(actual, expected);
   assert.equal(actual.reduce((sum, group) => sum + group.count, 0), hours.length);
