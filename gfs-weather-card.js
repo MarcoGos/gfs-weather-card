@@ -162,8 +162,11 @@ const CARD_STYLES = `
   .time-heading, tbody td { min-width: 29.6px; }
   .forecast-table .odd { background-color: var(--gfs-muted-background); }
   .forecast-table .even { background-color: var(--gfs-card-background); }
+  .day-heading + .day-heading, .day-start:not(:first-of-type) {
+    border-left: 2px solid var(--secondary-text-color, #777);
+  }
   .forecast-table tbody td:not(.direction) { color: #000; }
-  .direction { padding: 0.3rem; background-color: var(--gfs-card-background); color: var(--primary-text-color, #202124); font-size: 16px; line-height: 1.5; }
+  .forecast-table td.direction { padding: 0.3rem; background-color: var(--gfs-card-background); color: var(--primary-text-color, #202124); font-size: 16px; line-height: 1.5; }
   .status {
     padding: 20px 16px;
     color: var(--secondary-text-color, #666);

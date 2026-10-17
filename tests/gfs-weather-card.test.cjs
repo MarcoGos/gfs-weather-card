@@ -69,6 +69,35 @@ test('uses Home Assistant theme colors for neutral surfaces and text', async () 
   assert.doesNotMatch(card.shadowRoot.innerHTML, /prefers-color-scheme/);
 });
 
+test('day boundaries align across headings and all forecast rows', async () => {
+  const { card } = setup();
+  const hours = [0, 3, 9, 18, 24, 36, 48];
+  await load(card, forecast(6, hours));
+  const starts = hours.map((hour, index) => index === 0 ||
+    new Date(Date.UTC(2026, 9, 17, 6 + hour)).toDateString() !==
+    new Date(Date.UTC(2026, 9, 17, 6 + hours[index - 1])).toDateString());
+  const markup = card._tableMarkup();
+  const headings = [...markup.matchAll(/class="time-heading([^"]*)"/g)];
+  assert.deepEqual(headings.map((match) => match[1].includes('day-start')), starts);
+  for (const row of markup.split('<tbody>')[1].split('<tr>').slice(1)) {
+    const cells = [...row.matchAll(/<td class="([^"]*)"/g)];
+    assert.deepEqual(cells.map((match) => match[1].includes('day-start')), starts);
+  }
+  assert.equal([...markup.matchAll(/class="day-heading /g)].length, starts.filter(Boolean).length);
+  assert.match(card.shadowRoot.innerHTML,
+    /\.day-heading \+ \.day-heading, \.day-start:not\(:first-of-type\) \{\s*border-left: 2px solid var\(--secondary-text-color, #777\)/);
+});
+
+test('wind direction background overrides alternating day backgrounds', async () => {
+  const { card } = setup();
+  await load(card, forecast(6, [0, 24, 48]));
+  assert.match(card.shadowRoot.innerHTML,
+    /\.forecast-table td\.direction \{[^}]*background-color: var\(--gfs-card-background\)/);
+  const cells = [...card._tableMarkup().matchAll(/<td class="[^"]*\bdirection\b[^"]*"([^>]*)>/g)];
+  assert.equal(cells.length, 3);
+  assert.ok(cells.every((match) => !match[1].includes('style=')));
+});
+
 for (const pass of [0, 6, 12, 18]) {
   test(`renders pass ${pass} and forecast times relative to the run`, async () => {
     const { card } = setup();
