@@ -60,6 +60,15 @@ function headingHours(card) {
     .map((match) => Number(match[1]));
 }
 
+test('uses Home Assistant theme colors for neutral surfaces and text', async () => {
+  const { card } = setup();
+  await load(card, forecast(6));
+  assert.match(card.shadowRoot.innerHTML, /color: var\(--primary-text-color/);
+  assert.match(card.shadowRoot.innerHTML, /background-color: var\(--gfs-muted-background\)/);
+  assert.match(card.shadowRoot.innerHTML, /--gfs-card-background: var\(--ha-card-background/);
+  assert.doesNotMatch(card.shadowRoot.innerHTML, /prefers-color-scheme/);
+});
+
 for (const pass of [0, 6, 12, 18]) {
   test(`renders pass ${pass} and forecast times relative to the run`, async () => {
     const { card } = setup();
@@ -160,6 +169,6 @@ for (const pass of [undefined, null, '6', -6, 24]) {
     await load(card, forecast(pass));
     assert.equal(card._data, null);
     assert.match(card.shadowRoot.innerHTML, /class="status error"/);
-    assert.match(card.shadowRoot.innerHTML, /Kan de voorspelling niet ophalen/);
+    assert.match(card.shadowRoot.innerHTML, /Unable to fetch the forecast/);
   });
 }

@@ -79,10 +79,13 @@ const CARD_STYLES = `
   :host {
     display: block;
     color: var(--primary-text-color, #202124);
+    --gfs-card-background: var(--ha-card-background, var(--card-background-color, var(--primary-background-color, #fff)));
+    --gfs-muted-background: var(--secondary-background-color, var(--gfs-card-background));
   }
   ha-card {
     overflow: hidden;
-    background: var(--ha-card-background, var(--card-background-color, #fff));
+    background: var(--gfs-card-background);
+    color: var(--primary-text-color, #202124);
   }
   .scroller {
     overflow: auto;
@@ -97,7 +100,7 @@ const CARD_STYLES = `
     width: max-content;
     min-width: 100%;
     margin-bottom: 0;
-    color: #212529;
+    color: var(--primary-text-color, #202124);
     font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     font-size: 10px;
     line-height: 1.5;
@@ -106,7 +109,7 @@ const CARD_STYLES = `
   th, td {
     box-sizing: border-box;
     padding: 0.3rem;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid var(--divider-color, #dee2e6);
     text-align: center;
     white-space: nowrap;
     vertical-align: top;
@@ -114,7 +117,7 @@ const CARD_STYLES = `
   thead th {
     position: sticky;
     z-index: 2;
-    background: transparent;
+    background: var(--gfs-card-background);
     font-weight: 400;
   }
   thead tr:first-child th { top: 0; }
@@ -125,7 +128,7 @@ const CARD_STYLES = `
     z-index: 5;
     padding: 0.3rem;
     white-space: normal;
-    background: #eee;
+    background: var(--gfs-muted-background);
   }
   .corner strong, .corner span { display: block; }
   .corner strong { margin-bottom: 5px; font-size: 16px; }
@@ -152,28 +155,21 @@ const CARD_STYLES = `
     position: sticky;
     left: 0;
     z-index: 1;
-    background: #eee;
+    background: var(--gfs-muted-background);
     font-weight: 400;
     text-align: center;
   }
   .time-heading, tbody td { min-width: 29.6px; }
-  .forecast-table .odd { background-color: #bbb; }
-  .forecast-table .even { background-color: #eee; }
-  .direction { padding: 0.3rem; background-color: #fff; font-size: 16px; line-height: 1.5; }
+  .forecast-table .odd { background-color: var(--gfs-muted-background); }
+  .forecast-table .even { background-color: var(--gfs-card-background); }
+  .forecast-table tbody td:not(.direction) { color: #000; }
+  .direction { padding: 0.3rem; background-color: var(--gfs-card-background); color: var(--primary-text-color, #202124); font-size: 16px; line-height: 1.5; }
   .status {
     padding: 20px 16px;
     color: var(--secondary-text-color, #666);
     text-align: center;
   }
   .error { color: var(--error-color, #b3261e); }
-  @media (prefers-color-scheme: dark) {
-    .forecast-table { color: #000 !important; }
-    .forecast-table .row-label { color: #fff !important; background-color: transparent; }
-    .forecast-table thead { color: #fff !important; }
-    .forecast-table .direction { background-color: #fff !important; color: #000; }
-    .forecast-table .odd { background-color: #bbb; }
-    .forecast-table .even { background-color: #222; }
-  }
   @media (max-width: 600px) {
     .row-label { position: static; }
     .corner { left: auto; }
@@ -488,9 +484,7 @@ class GfsWeatherCard extends HTMLElement {
         const colorValue = row.colorValue ? row.colorValue(column.point) : value;
         const startsDay = index === 0 || localDateKey(column.date) !== localDateKey(columns[index - 1].date);
         const className = [dayParityClass(column.date), row.kind === 'direction' ? 'direction' : '', startsDay ? 'day-start' : ''].filter(Boolean).join(' ');
-        const background = row.kind === 'direction' || row.kind === 'visibility'
-          ? '#ffffff'
-          : colorFor(row.kind, colorValue);
+        const background = row.kind === 'visibility' ? '#ffffff' : colorFor(row.kind, colorValue);
         const foreground = row.kind === 'visibility' ? colorFor(row.kind, colorValue) : '';
         const styles = [];
         if (background) styles.push(`background-color:${background}`);

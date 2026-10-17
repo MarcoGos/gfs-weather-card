@@ -26,6 +26,8 @@ Cloud, rain, and CAPE values that round to zero are displayed as blank cells, re
 
 Row labels follow Home Assistant's active language. Dutch, English, and German are supported; other languages fall back to English.
 
+Card surfaces, labels, and neutral table areas use Home Assistant theme colors and follow its active light or dark theme. The weather-data color scale remains the same in both modes.
+
 ## Tests
 
 Run the regression tests with Node.js:
