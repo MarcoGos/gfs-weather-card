@@ -165,8 +165,8 @@ const CARD_STYLES = `
   .day-heading + .day-heading, .day-start:not(:first-of-type) {
     border-left: 1px solid var(--secondary-text-color, #777);
   }
-  .forecast-table tbody td:not(.direction) { color: #000; }
-  .forecast-table td.direction { padding: 0.3rem; color: var(--primary-text-color, #202124); font-size: 16px; line-height: 1.5; }
+  .forecast-table tbody td { color: #000; }
+  .forecast-table td.direction { padding: 0.3rem; font-size: 16px; line-height: 1.5; }
   .status {
     padding: 20px 16px;
     color: var(--secondary-text-color, #666);
@@ -510,7 +510,7 @@ class GfsWeatherCard extends HTMLElement {
         const colorValue = row.colorValue ? row.colorValue(column.point) : value;
         const startsDay = index === 0 || localDateKey(column.date) !== localDateKey(columns[index - 1].date);
         const className = [dayParityClass(column.date), row.kind === 'direction' ? 'direction' : '', startsDay ? 'day-start' : ''].filter(Boolean).join(' ');
-        const background = row.kind === 'visibility' ? '#ffffff' : colorFor(row.kind, colorValue);
+        const background = row.kind === 'visibility' || row.kind === 'direction' ? '#ffffff' : colorFor(row.kind, colorValue);
         const foreground = row.kind === 'visibility' ? colorFor(row.kind, colorValue) : '';
         const styles = [];
         if (background) styles.push(`background-color:${background}`);
