@@ -130,9 +130,13 @@ const CARD_STYLES = `
   .corner strong, .corner span { display: block; }
   .corner strong { margin-bottom: 5px; font-size: 16px; }
   .corner span { line-height: 1.45; }
-  .day-heading { text-transform: lowercase; }
-  .time-heading {
+  .day-heading {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: lowercase;
+    vertical-align: middle;
   }
+  .time-heading { font-weight: 700; }
   .row-label {
     position: sticky;
     left: 0;
