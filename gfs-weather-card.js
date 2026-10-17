@@ -118,7 +118,8 @@ const CARD_STYLES = `
     font-weight: 400;
   }
   thead tr:first-child th { top: 0; }
-  thead tr:last-child th { top: 36px; }
+  thead tr:first-child { height: 32px; }
+  thead tr:last-child th { top: 32px; }
   .corner {
     left: 0;
     z-index: 5;
@@ -159,7 +160,6 @@ const CARD_STYLES = `
     .forecast-table .even { background-color: #222; }
   }
   @media (max-width: 600px) {
-    thead tr:last-child th { top: 32px; }
     .row-label { position: static; }
     .corner { left: auto; }
   }
@@ -449,11 +449,18 @@ class GfsWeatherCard extends HTMLElement {
       point,
       date: new Date(runDate.getTime() + hour * HOUR_MS),
     }));
-    const dateHeadings = columns.map((column) => {
-      const weekday = formatDate(column.date, { weekday: 'short' });
-      const day = formatDate(column.date, { day: 'numeric' });
-      const month = formatDate(column.date, { month: 'short' });
-      return `<th class="day-heading ${dayParityClass(column.date)}" scope="col">${weekday}<br>${day}<br>${month}</th>`;
+    const dayGroups = [];
+    for (const column of columns) {
+      const key = localDateKey(column.date);
+      const previous = dayGroups[dayGroups.length - 1];
+      if (previous?.key === key) previous.count += 1;
+      else dayGroups.push({ key, date: column.date, count: 1 });
+    }
+    const dateHeadings = dayGroups.map(({ date, count }) => {
+      const weekday = formatDate(date, { weekday: 'short' });
+      const day = formatDate(date, { day: 'numeric' });
+      const month = formatDate(date, { month: 'short' });
+      return `<th class="day-heading ${dayParityClass(date)}" scope="colgroup" colspan="${count}">${weekday} ${day} ${month}</th>`;
     }).join('');
     const timeHeadings = columns.map((column, index) => {
       const startsDay = index === 0 || localDateKey(column.date) !== localDateKey(columns[index - 1].date);

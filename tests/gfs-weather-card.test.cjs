@@ -78,7 +78,43 @@ test('forecast offsets cross midnight without changing the run date', async () =
     new Date(Date.UTC(2026, 9, 17, 18 + hour)).getHours()));
   const day = new Intl.DateTimeFormat('nl-NL', { day: 'numeric' })
     .format(new Date(Date.UTC(2026, 9, 18)));
-  assert.match(card.shadowRoot.innerHTML, new RegExp(`<br>${day}<br>`));
+  assert.match(card.shadowRoot.innerHTML, new RegExp(`>${formatWeekday(new Date(Date.UTC(2026, 9, 18)))} ${day} okt</th>`));
+});
+
+function formatWeekday(date) {
+  return new Intl.DateTimeFormat('nl-NL', { weekday: 'short' }).format(date).replaceAll('.', '');
+}
+
+test('one date heading spans all forecast columns on the same local day', async () => {
+  const { card } = setup();
+  const hours = [0, 1, 2];
+  await load(card, forecast(6, hours));
+  const headings = [...card.shadowRoot.innerHTML.matchAll(/class="day-heading[^"]*" scope="colgroup" colspan="(\d+)">([^<]+)<\/th>/g)];
+  assert.equal(headings.length, 1);
+  assert.equal(Number(headings[0][1]), hours.length);
+  const date = new Date(Date.UTC(2026, 9, 17, 6));
+  const day = new Intl.DateTimeFormat('nl-NL', { day: 'numeric' }).format(date);
+  assert.equal(headings[0][2], `${formatWeekday(date)} ${day} okt`);
+  assert.equal(headingHours(card).length, hours.length);
+});
+
+test('date headings span only available hours and split at local midnight', async () => {
+  const { card } = setup();
+  const hours = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 48];
+  await load(card, forecast(6, hours));
+  const expected = [];
+  for (const hour of hours) {
+    const date = new Date(Date.UTC(2026, 9, 17, 6 + hour));
+    const label = `${formatWeekday(date)} ${date.getDate()} okt`;
+    const previous = expected[expected.length - 1];
+    if (previous?.label === label) previous.count += 1;
+    else expected.push({ label, count: 1 });
+  }
+  const actual = [...card.shadowRoot.innerHTML.matchAll(/class="day-heading[^"]*" scope="colgroup" colspan="(\d+)">([^<]+)<\/th>/g)]
+    .map((match) => ({ label: match[2], count: Number(match[1]) }));
+  assert.deepEqual(actual, expected);
+  assert.equal(actual.reduce((sum, group) => sum + group.count, 0), hours.length);
+  assert.equal(headingHours(card).length, hours.length);
 });
 
 test('ten-minute polling replaces pass 0 with pass 6 from the integration cache', async () => {
