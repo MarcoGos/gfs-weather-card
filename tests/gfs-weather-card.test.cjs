@@ -129,6 +129,10 @@ test('date headings use the full Home Assistant locale', async () => {
     new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date),
   ].join(' ');
   assert.ok(card._tableMarkup().includes(`<span>${expectedHeading}</span>`));
+  const expectedRunDate = new Intl.DateTimeFormat('en-US', {
+    day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
+  }).format(date);
+  assert.ok(card._tableMarkup().includes(`<span>${expectedRunDate} (06)</span>`));
 });
 
 test('editor config updates preserve other options and emit independent config copies', () => {

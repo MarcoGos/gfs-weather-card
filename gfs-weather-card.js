@@ -528,9 +528,9 @@ class GfsWeatherCard extends HTMLElement {
       return `<tr><th class="row-label" scope="row">${label}${row.unit ? ` ${row.unit}` : ''}</th>${cells}</tr>`;
     }).join('');
 
-    const runDateLabel = new Intl.DateTimeFormat('nl-NL', {
+    const runDateLabel = formatDate(runDate, {
       day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
-    }).format(runDate).replaceAll('.', '');
+    }, this._dateLocale);
     return `<table class="forecast-table"><thead><tr><th class="corner" rowspan="2"><strong>GFS</strong><span>${runDateLabel} (${String(info.pass).padStart(2, '0')})</span></th>${dateHeadings}</tr><tr>${timeHeadings}</tr></thead><tbody>${rows}</tbody></table>`;
   }
 }
