@@ -118,6 +118,19 @@ test('card copies the row selection and retains localized row labels', async () 
   assert.match(card._tableMarkup(), />Temperatur 2m \(°C\)<\/th>/);
 });
 
+test('date headings use the full Home Assistant locale', async () => {
+  const { card } = setup();
+  await load(card, forecast(6));
+  card.hass = { locale: { language: 'en-US' } };
+  const date = new Date(Date.UTC(2026, 9, 17, 6));
+  const expectedHeading = [
+    new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date),
+    new Intl.DateTimeFormat('en-US', { day: 'numeric' }).format(date),
+    new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date),
+  ].join(' ');
+  assert.ok(card._tableMarkup().includes(`<span>${expectedHeading}</span>`));
+});
+
 test('editor config updates preserve other options and emit independent config copies', () => {
   const { Editor } = setup();
   const editor = new Editor();

@@ -47,7 +47,7 @@ The card requests the cached forecast every 10 minutes; the integration controls
 
 Cloud, rain, and CAPE values that round to zero are displayed as blank cells, retaining their background colors.
 
-Row labels follow Home Assistant's active language. Dutch, English, and German are supported; other languages fall back to English.
+Date headings follow Home Assistant's configured locale. Row labels follow Home Assistant's active language; Dutch, English, and German are supported, with other languages falling back to English.
 
 Card surfaces, labels, and neutral table areas use Home Assistant theme colors and follow its active light or dark theme. The weather-data color scale remains the same in both modes.
 

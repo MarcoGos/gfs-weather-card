@@ -325,8 +325,8 @@ function dayParityClass(date) {
   return dayOfYear % 2 === 1 ? 'odd' : 'even';
 }
 
-function formatDate(date, options) {
-  return new Intl.DateTimeFormat('nl-NL', options).format(date).replaceAll('.', '');
+function formatDate(date, options, locale) {
+  return new Intl.DateTimeFormat(locale, options).format(date);
 }
 
 function isRecord(value) {
@@ -361,6 +361,7 @@ class GfsWeatherCard extends HTMLElement {
     this._error = '';
     this._loading = false;
     this._language = 'en';
+    this._dateLocale = 'en';
     this._hass = null;
     this._requestId = 0;
     this._refreshTimer = null;
@@ -373,8 +374,10 @@ class GfsWeatherCard extends HTMLElement {
   set hass(hass) {
     const wasAvailable = Boolean(this._hass);
     this._hass = hass;
-    const language = resolveLanguage(hass?.locale?.language ?? hass?.language);
-    if (language !== this._language) {
+    const dateLocale = hass?.locale?.language ?? hass?.language ?? 'en';
+    const language = resolveLanguage(dateLocale);
+    if (language !== this._language || dateLocale !== this._dateLocale) {
+      this._dateLocale = dateLocale;
       this._language = language;
       if (this._data) this._render();
     }
@@ -491,9 +494,9 @@ class GfsWeatherCard extends HTMLElement {
       else dayGroups.push({ key, date: column.date, count: 1 });
     }
     const dateHeadings = dayGroups.map(({ date, count }) => {
-      const weekday = formatDate(date, { weekday: 'short' });
-      const day = formatDate(date, { day: 'numeric' });
-      const month = formatDate(date, { month: 'short' });
+      const weekday = formatDate(date, { weekday: 'short' }, this._dateLocale);
+      const day = formatDate(date, { day: 'numeric' }, this._dateLocale);
+      const month = formatDate(date, { month: 'short' }, this._dateLocale);
       return `<th class="day-heading ${dayParityClass(date)}" scope="colgroup" colspan="${count}"><span>${weekday} ${day} ${month}</span></th>`;
     }).join('');
     const timeHeadings = columns.map((column, index) => {
