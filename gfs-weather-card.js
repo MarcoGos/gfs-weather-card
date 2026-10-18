@@ -37,7 +37,7 @@ const LABELS = {
   },
   nl: {
     wind: 'Windkracht',
-    gust: 'Windstoren',
+    gust: 'Windstoten',
     direction: 'Windrichting',
     temperature: 'Temperatuur 2m',
     upperTemperature: 'Temperatuur 500hPa',
@@ -156,6 +156,7 @@ const CARD_STYLES = `
     left: 0;
     z-index: 1;
     background: var(--gfs-muted-background);
+    box-shadow: 0 -1px 0 var(--gfs-muted-background), 0 1px 0 var(--gfs-muted-background);
     font-weight: 400;
     text-align: center;
   }

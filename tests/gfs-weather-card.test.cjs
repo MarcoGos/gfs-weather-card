@@ -80,6 +80,8 @@ test('sticky cells retain their own separators without gaps between cells', asyn
   await load(card, forecast(6));
   assert.match(card.shadowRoot.innerHTML, /border-collapse: separate;\s*border-spacing: 0;/);
   assert.match(card.shadowRoot.innerHTML, /border-top: 1px solid var\(--divider-color, #dee2e6\)/);
+  assert.match(card.shadowRoot.innerHTML,
+    /\.row-label \{[^}]*box-shadow: 0 -1px 0 var\(--gfs-muted-background\), 0 1px 0 var\(--gfs-muted-background\);/);
 });
 
 test('row selection filters in standard order without requesting new data', async () => {
