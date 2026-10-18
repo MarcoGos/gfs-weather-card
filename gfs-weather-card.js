@@ -159,6 +159,7 @@ const CARD_STYLES = `
     box-shadow: 0 -1px 0 var(--gfs-muted-background), 0 1px 0 var(--gfs-muted-background);
     font-weight: 400;
     text-align: center;
+    vertical-align: middle;
   }
   .time-heading, tbody td { min-width: 29.6px; }
   .forecast-table .odd { background-color: var(--gfs-muted-background); }

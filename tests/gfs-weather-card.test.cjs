@@ -84,6 +84,12 @@ test('sticky cells retain their own separators without gaps between cells', asyn
     /\.row-label \{[^}]*box-shadow: 0 -1px 0 var\(--gfs-muted-background\), 0 1px 0 var\(--gfs-muted-background\);/);
 });
 
+test('row labels are vertically centered in taller wind direction cells', async () => {
+  const { card } = setup();
+  await load(card, forecast(6));
+  assert.match(card.shadowRoot.innerHTML, /\.row-label \{[^}]*vertical-align: middle;/);
+});
+
 test('row selection filters in standard order without requesting new data', async () => {
   const { card } = setup();
   let requests = 0;
