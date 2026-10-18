@@ -94,7 +94,7 @@ const CARD_STYLES = `
     scrollbar-color: var(--secondary-text-color, #777) transparent;
   }
   table {
-    border-collapse: collapse;
+    border-collapse: separate;
     border-spacing: 0;
     table-layout: auto;
     width: max-content;
@@ -162,7 +162,7 @@ const CARD_STYLES = `
   .time-heading, tbody td { min-width: 29.6px; }
   .forecast-table .odd { background-color: var(--gfs-muted-background); }
   .forecast-table .even { background-color: var(--gfs-card-background); }
-  .day-heading + .day-heading, .day-start:not(:first-of-type) {
+  .day-heading, .day-start {
     border-left: 1px solid var(--secondary-text-color, #777);
   }
   .forecast-table tbody td { color: #000; }

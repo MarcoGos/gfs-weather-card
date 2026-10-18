@@ -75,6 +75,13 @@ test('uses Home Assistant theme colors for neutral surfaces and text', async () 
   assert.doesNotMatch(card.shadowRoot.innerHTML, /prefers-color-scheme/);
 });
 
+test('sticky cells retain their own separators without gaps between cells', async () => {
+  const { card } = setup();
+  await load(card, forecast(6));
+  assert.match(card.shadowRoot.innerHTML, /border-collapse: separate;\s*border-spacing: 0;/);
+  assert.match(card.shadowRoot.innerHTML, /border-top: 1px solid var\(--divider-color, #dee2e6\)/);
+});
+
 test('row selection filters in standard order without requesting new data', async () => {
   const { card } = setup();
   let requests = 0;
@@ -236,7 +243,7 @@ test('day boundaries align across headings and all forecast rows', async () => {
   }
   assert.equal([...markup.matchAll(/class="day-heading /g)].length, starts.filter(Boolean).length);
   assert.match(card.shadowRoot.innerHTML,
-    /\.day-heading \+ \.day-heading, \.day-start:not\(:first-of-type\) \{\s*border-left: 2px solid var\(--secondary-text-color, #777\)/);
+    /\.day-heading, \.day-start \{\s*border-left: 1px solid var\(--secondary-text-color, #777\)/);
 });
 
 test('wind direction cells use the zero-Beaufort wind background', async () => {
