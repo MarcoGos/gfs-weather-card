@@ -120,7 +120,7 @@ const CARD_STYLES = `
     background: var(--gfs-card-background);
     font-weight: 400;
   }
-  thead tr:first-child th { top: 0; }
+  thead tr:first-child th { top: 0; border-top: 0; }
   thead tr:first-child { height: 32px; }
   thead tr:last-child th { top: 32px; }
   .corner {
