@@ -2,7 +2,14 @@
 
 A custom Home Assistant Lovelace card that displays forecast data from the GFS Weather Forecast integration as a horizontally scrollable table.
 
-## Install with HACS
+## Install
+
+[![Add GFS Weather Card to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MarcoGos&repository=gfs-weather-card&category=dashboard)
+
+<details>
+<summary>Manual installation instructions</summary>
+
+### Install with HACS
 
 1. Add this repository in HACS as a custom repository with the **Dashboard** category.
 2. Download the card.
@@ -13,6 +20,8 @@ A custom Home Assistant Lovelace card that displays forecast data from the GFS W
 ```yaml
 type: custom:gfs-weather-card
 ```
+
+</details>
 
 ## Visible rows
 
