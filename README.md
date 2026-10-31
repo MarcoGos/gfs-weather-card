@@ -1,5 +1,7 @@
 # GFS Weather Card
 
+![GFS Weather Card logo](logo.png)
+
 A custom Home Assistant Lovelace card that displays forecast data from the GFS Weather Forecast integration as a horizontally scrollable table.
 
 ## Install
