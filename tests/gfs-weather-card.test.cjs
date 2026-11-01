@@ -409,11 +409,27 @@ test('selected integration entry is preserved in forecast requests', async () =>
 });
 
 for (const pass of [undefined, null, '6', -6, 24]) {
-  test(`invalid pass ${String(pass)} displays the forecast error`, async () => {
+  test(`invalid pass ${String(pass)} displays the specific forecast error`, async () => {
     const { card } = setup();
     await load(card, forecast(pass));
     assert.equal(card._data, null);
     assert.match(card.shadowRoot.innerHTML, /class="status error"/);
-    assert.match(card.shadowRoot.innerHTML, /Unable to fetch the forecast/);
+    assert.match(card.shadowRoot.innerHTML, /The forecast data is invalid\./);
   });
 }
+
+test('empty forecast hours display a specific localized error', async () => {
+  const { card } = setup();
+  card._language = 'de';
+  await load(card, forecast(6, []));
+  assert.equal(card._error, 'noForecastHours');
+  assert.match(card.shadowRoot.innerHTML, /Die Vorhersage enthält keine verfügbaren Stunden\./);
+});
+
+test('unexpected forecast errors retain the generic message', async () => {
+  const { card } = setup();
+  card._hass = { callWS: async () => { throw new Error('Disconnected'); } };
+  await card._load();
+  assert.equal(card._error, 'fetchError');
+  assert.match(card.shadowRoot.innerHTML, /Unable to fetch the forecast/);
+});

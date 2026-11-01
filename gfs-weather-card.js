@@ -21,6 +21,8 @@ const LABELS = {
     visibility: 'Sichtweite',
     loading: 'Vorhersage wird geladen…',
     fetchError: 'Die Vorhersage konnte nicht abgerufen werden. Prüfe, ob die GFS-Weather-Forecast-Integration geladen und Vorhersagen verfügbar sind.',
+    invalidForecastData: 'Die Vorhersagedaten sind ungültig.',
+    noForecastHours: 'Die Vorhersage enthält keine verfügbaren Stunden.',
     forecast: 'GFS-Wettervorhersage',
     calm: 'Windstille',
   },
@@ -41,6 +43,8 @@ const LABELS = {
     visibility: 'Visibility',
     loading: 'Loading forecast…',
     fetchError: 'Unable to fetch the forecast. Check that the GFS Weather Forecast integration is loaded and forecasts are available.',
+    invalidForecastData: 'The forecast data is invalid.',
+    noForecastHours: 'No forecast hours are available.',
     forecast: 'GFS weather forecast',
     calm: 'Calm',
   },
@@ -61,6 +65,8 @@ const LABELS = {
     visibility: 'Zicht',
     loading: 'Verwachting laden…',
     fetchError: 'Kan de verwachting niet ophalen. Controleer of de GFS Weather Forecast-integratie geladen is en of er verwachtingen beschikbaar zijn.',
+    invalidForecastData: 'De verwachtingsgegevens zijn ongeldig.',
+    noForecastHours: 'Er zijn geen voorspellingsuren beschikbaar.',
     forecast: 'GFS weersverwachting',
     calm: 'Windstil',
   },
@@ -465,7 +471,7 @@ class GfsWeatherCard extends HTMLElement {
       if (requestId !== this._requestId) return;
       if (!isRecord(json) || !isRecord(json.info) || !/^\d{4}-\d{2}-\d{2}$/.test(json.info.date) ||
           ![0, 6, 12, 18].includes(json.info.pass)) {
-        throw new Error('Invalid forecast data');
+        throw new Error('invalidForecastData');
       }
 
       const points = Object.entries(json)
@@ -473,14 +479,17 @@ class GfsWeatherCard extends HTMLElement {
         .map(([key, value]) => ({ hour: Number(key), point: value }))
         .filter(({ hour }) => Number.isSafeInteger(hour))
         .sort((left, right) => left.hour - right.hour);
-      if (points.length === 0) throw new Error('No forecast hours found');
+      if (points.length === 0) throw new Error('noForecastHours');
 
       this._data = { info: json.info, points };
       this._error = '';
     } catch (error) {
       if (requestId !== this._requestId) return;
       this._data = null;
-      this._error = 'fetchError';
+      const errorKey = error?.message;
+      this._error = errorKey === 'invalidForecastData' || errorKey === 'noForecastHours'
+        ? errorKey
+        : 'fetchError';
     } finally {
       if (requestId === this._requestId) {
         this._loading = false;
