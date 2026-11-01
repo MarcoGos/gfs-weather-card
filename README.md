@@ -54,7 +54,7 @@ The card requests the integration's cached JSON through Home Assistant's authent
 
 The response must contain an `info.date` value in `YYYY-MM-DD` format, a numeric `info.pass` (0, 6, 12, or 18 UTC), and forecast-hour properties whose values contain the weather fields used by the table. The header displays the actual run date and pass. Forecast hours are offsets from that run's start (`info.date` at `info.pass` UTC); the resulting times are displayed in the browser's local timezone. The browser no longer connects directly to the add-on, so no separate URL or CORS configuration is needed for the card.
 
-The card requests the cached forecast every 10 minutes; the integration controls when the underlying data is updated. It converts wind speed to Beaufort, gusts from m/s to km/h, pressure from Pa to hPa above 1000, and visibility from meters to kilometers. The 2m temperature row uses `tmax`.
+The card requests the cached forecast every 10 minutes; failed requests are retried every 15 seconds until forecasts are available again. The integration controls when the underlying data is updated. It converts wind speed to Beaufort, gusts from m/s to km/h, pressure from Pa to hPa above 1000, and visibility from meters to kilometers. The 2m temperature row uses `tmax`.
 
 Cloud, rain, and CAPE values that round to zero are displayed as blank cells, retaining their background colors.
 

@@ -349,6 +349,53 @@ test('ten-minute polling replaces pass 0 with pass 6 from the integration cache'
   assert.equal(timers.size, 0);
 });
 
+test('failed forecasts retry promptly and restore normal polling after recovery', async () => {
+  const { card, timers } = setup();
+  let enabled = false;
+  let requests = 0;
+  card._hass = { callWS: async () => {
+    requests += 1;
+    if (!enabled) throw new Error('Integration disabled');
+    return forecast(6);
+  } };
+  card.connectedCallback();
+  await setImmediate();
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    assert.equal(timers.size, 1);
+    assert.equal(card._error, 'fetchError');
+    const timer = [...timers.values()][0];
+    assert.equal(timer.delay, 15 * 1000);
+    timer.callback();
+    await setImmediate();
+  }
+  enabled = true;
+  [...timers.values()][0].callback();
+  await setImmediate();
+  assert.equal(requests, 4);
+  assert.equal(card._error, '');
+  assert.match(card.shadowRoot.innerHTML, /class="forecast-table"/);
+  assert.equal(timers.size, 1);
+  assert.equal([...timers.values()][0].delay, 10 * 60 * 1000);
+  card.disconnectedCallback();
+  assert.equal(timers.size, 0);
+});
+
+test('disconnecting during a retry does not restart polling or render a stale result', async () => {
+  const { card, timers } = setup();
+  card._hass = { callWS: async () => { throw new Error('Integration disabled'); } };
+  card.connectedCallback();
+  await setImmediate();
+  let finishRequest;
+  card._hass = { callWS: () => new Promise((resolve) => { finishRequest = resolve; }) };
+  [...timers.values()][0].callback();
+  card.isConnected = false;
+  card.disconnectedCallback();
+  finishRequest(forecast(6));
+  await setImmediate();
+  assert.equal(timers.size, 0);
+  assert.equal(card._data, null);
+});
+
 test('selected integration entry is preserved in forecast requests', async () => {
   const { card } = setup();
   card.setConfig({ entry_id: 'selected-entry' });

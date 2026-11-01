@@ -1,5 +1,6 @@
 const CARD_NAME = 'gfs-weather-card';
 const REFRESH_INTERVAL = 10 * 60 * 1000;
+const RETRY_INTERVAL = 15 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
 
 const LABELS = {
@@ -412,13 +413,23 @@ class GfsWeatherCard extends HTMLElement {
 
   connectedCallback() {
     this._load();
-    this._refreshTimer = window.setInterval(() => this._load(), REFRESH_INTERVAL);
+    this._scheduleRefresh();
   }
 
   disconnectedCallback() {
     window.clearInterval(this._refreshTimer);
+    this._refreshTimer = null;
     this._requestId += 1;
     this._loading = false;
+  }
+
+  _scheduleRefresh() {
+    window.clearInterval(this._refreshTimer);
+    this._refreshTimer = null;
+    if (!this.isConnected) return;
+    this._refreshTimer = window.setInterval(
+      () => this._load(), this._error ? RETRY_INTERVAL : REFRESH_INTERVAL,
+    );
   }
 
   getCardSize() {
@@ -474,6 +485,7 @@ class GfsWeatherCard extends HTMLElement {
       if (requestId === this._requestId) {
         this._loading = false;
         this._render();
+        this._scheduleRefresh();
       }
     }
   }
