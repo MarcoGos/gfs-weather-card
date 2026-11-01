@@ -18,6 +18,10 @@ const LABELS = {
     liftedIndex: 'Lifted Index',
     pressure: 'Luftdruck',
     visibility: 'Sichtweite',
+    loading: 'Vorhersage wird geladen…',
+    fetchError: 'Die Vorhersage konnte nicht abgerufen werden. Prüfe, ob die GFS-Weather-Forecast-Integration geladen und Vorhersagen verfügbar sind.',
+    forecast: 'GFS-Wettervorhersage',
+    calm: 'Windstille',
   },
   en: {
     wind: 'Wind',
@@ -34,6 +38,10 @@ const LABELS = {
     liftedIndex: 'Lifted Index',
     pressure: 'Pressure',
     visibility: 'Visibility',
+    loading: 'Loading forecast…',
+    fetchError: 'Unable to fetch the forecast. Check that the GFS Weather Forecast integration is loaded and forecasts are available.',
+    forecast: 'GFS weather forecast',
+    calm: 'Calm',
   },
   nl: {
     wind: 'Windkracht',
@@ -50,6 +58,10 @@ const LABELS = {
     liftedIndex: 'Lifted Index',
     pressure: 'Luchtdruk',
     visibility: 'Zicht',
+    loading: 'Verwachting laden…',
+    fetchError: 'Kan de verwachting niet ophalen. Controleer of de GFS Weather Forecast-integratie geladen is en of er verwachtingen beschikbaar zijn.',
+    forecast: 'GFS weersverwachting',
+    calm: 'Windstil',
   },
 };
 
@@ -381,7 +393,7 @@ class GfsWeatherCard extends HTMLElement {
     if (language !== this._language || dateLocale !== this._dateLocale) {
       this._dateLocale = dateLocale;
       this._language = language;
-      if (this._data) this._render();
+      this._render();
     }
     if (!wasAvailable && hass && this.isConnected) this._load();
   }
@@ -423,7 +435,6 @@ class GfsWeatherCard extends HTMLElement {
 
   async _load() {
     if (!this.hass) {
-      this._error = 'Waiting for Home Assistant…';
       this._render();
       return;
     }
@@ -458,7 +469,7 @@ class GfsWeatherCard extends HTMLElement {
     } catch (error) {
       if (requestId !== this._requestId) return;
       this._data = null;
-      this._error = 'Unable to fetch the forecast. Check that the GFS Weather Forecast integration is loaded and forecasts are available.';
+      this._error = 'fetchError';
     } finally {
       if (requestId === this._requestId) {
         this._loading = false;
@@ -469,13 +480,14 @@ class GfsWeatherCard extends HTMLElement {
 
   _render() {
     if (!this.shadowRoot) return;
+    const texts = LABELS[this._language] ?? LABELS.en;
     if (this._data) {
-      this.shadowRoot.innerHTML = `<style>${CARD_STYLES}</style><ha-card><div class="scroller" tabindex="0" aria-label="GFS weersverwachting">${this._tableMarkup()}</div></ha-card>`;
+      this.shadowRoot.innerHTML = `<style>${CARD_STYLES}</style><ha-card><div class="scroller" tabindex="0" aria-label="${texts.forecast}">${this._tableMarkup()}</div></ha-card>`;
       return;
     }
 
-    const message = this._loading ? 'Verwachting laden…' : this._error;
-    const errorClass = this._loading ? '' : ' error';
+    const message = this._error && !this._loading ? texts[this._error] : texts.loading;
+    const errorClass = this._error && !this._loading ? ' error' : '';
     this.shadowRoot.innerHTML = `<style>${CARD_STYLES}</style><ha-card><div class="status${errorClass}" role="status">${message}</div></ha-card>`;
   }
 
@@ -521,8 +533,8 @@ class GfsWeatherCard extends HTMLElement {
         let content = value === null ? '–' : value;
         if (row.kind === 'direction' && value) {
           content = value.calm
-            ? '<span aria-label="Windstil">·</span>'
-            : `<span aria-label="Windrichting" style="display:inline-block;transform:rotate(${value.angle}deg)">↓</span>`;
+            ? `<span aria-label="${rowLabels.calm}">·</span>`
+            : `<span aria-label="${rowLabels.direction}" style="display:inline-block;transform:rotate(${value.angle}deg)">↓</span>`;
         }
         return `<td class="${className}"${style}>${content}</td>`;
       }).join('');
